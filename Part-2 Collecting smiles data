@@ -1,1 +1,26 @@
+import pandas as pd
+import requests
+import xml.etree.ElementTree as ET
+# Load  DataFrame (replace with your file)
+df = pd.read_csv('activity_data_1.csv') 
 
+# Function to fetch SMILES
+def fetch_smiles(chembl_id):
+    url = f"https://www.ebi.ac.uk/chembl/api/data/molecule/{chembl_id}"
+    try:
+        response = requests.get(url, timeout=10)
+        if response.status_code == 200:
+            # Parse XML
+            root = ET.fromstring(response.content)
+            # Extract SMILES
+            smiles = root.find(".//canonical_smiles")  # Adjust XPath if needed
+            return smiles.text if smiles is not None else None
+        else:
+            print(f"Error: Received status code {response.status_code} for {chembl_id}")
+    except Exception as e:
+        print(f"Exception for {chembl_id}: {e}")
+    return None
+
+df['SMILES'] = df['molecule_chembl_id'].apply(fetch_smiles)
+# Save results(replace the name)
+df.to_csv('name.csv', index=False)
